@@ -3,6 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rexlib", "rexlib\rexlib.vcproj", "{9A3DD193-2F28-466F-91A7-411A3A6149CA}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "testbed", "testbed\testbed.vcproj", "{8C335285-33AE-4BD3-9D0D-928AE517FE8A}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9A3DD193-2F28-466F-91A7-411A3A6149CA} = {9A3DD193-2F28-466F-91A7-411A3A6149CA}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -13,6 +18,10 @@ Global
 		{9A3DD193-2F28-466F-91A7-411A3A6149CA}.Debug|Win32.Build.0 = Debug|Win32
 		{9A3DD193-2F28-466F-91A7-411A3A6149CA}.Release|Win32.ActiveCfg = Release|Win32
 		{9A3DD193-2F28-466F-91A7-411A3A6149CA}.Release|Win32.Build.0 = Release|Win32
+		{8C335285-33AE-4BD3-9D0D-928AE517FE8A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8C335285-33AE-4BD3-9D0D-928AE517FE8A}.Debug|Win32.Build.0 = Debug|Win32
+		{8C335285-33AE-4BD3-9D0D-928AE517FE8A}.Release|Win32.ActiveCfg = Release|Win32
+		{8C335285-33AE-4BD3-9D0D-928AE517FE8A}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

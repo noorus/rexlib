@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9,00"
-	Name="rexlib"
-	ProjectGUID="{9A3DD193-2F28-466F-91A7-411A3A6149CA}"
-	RootNamespace="rexlib"
+	Name="testbed"
+	ProjectGUID="{8C335285-33AE-4BD3-9D0D-928AE517FE8A}"
+	RootNamespace="testbed"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -18,9 +18,9 @@
 	<Configurations>
 		<Configuration
 			Name="Debug|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)bin"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="4"
+			ConfigurationType="1"
 			CharacterSet="1"
 			>
 			<Tool
@@ -42,7 +42,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)include&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;REXLIB_BUILD"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
@@ -60,11 +60,20 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLibrarianTool"
-				OutputFile="$(SolutionDir)lib\$(ProjectName)_d.lib"
+				Name="VCLinkerTool"
+				AdditionalDependencies="rexlib_d.lib"
+				OutputFile="$(OutDir)\$(ProjectName)_d.exe"
+				LinkIncremental="2"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)lib&quot;"
+				GenerateDebugInformation="true"
+				SubSystem="1"
+				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -76,14 +85,17 @@
 				Name="VCFxCopTool"
 			/>
 			<Tool
+				Name="VCAppVerifierTool"
+			/>
+			<Tool
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
 		<Configuration
 			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)$(ConfigurationName)"
+			OutputDirectory="$(SolutionDir)bin"
 			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="4"
+			ConfigurationType="1"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -107,7 +119,7 @@
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)include&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;REXLIB_BUILD"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
@@ -124,11 +136,21 @@
 				Name="VCPreLinkEventTool"
 			/>
 			<Tool
-				Name="VCLibrarianTool"
-				OutputFile="$(SolutionDir)lib\$(ProjectName).lib"
+				Name="VCLinkerTool"
+				AdditionalDependencies="rexlib.lib"
+				LinkIncremental="1"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)lib&quot;"
+				GenerateDebugInformation="true"
+				SubSystem="1"
+				OptimizeReferences="2"
+				EnableCOMDATFolding="2"
+				TargetMachine="1"
 			/>
 			<Tool
 				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCManifestTool"
 			/>
 			<Tool
 				Name="VCXDCMakeTool"
@@ -138,6 +160,9 @@
 			/>
 			<Tool
 				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCAppVerifierTool"
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
@@ -153,7 +178,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\Source\REXLib.cpp"
+				RelativePath=".\Source\main.cpp"
 				>
 			</File>
 		</Filter>
@@ -174,10 +199,6 @@
 			>
 			<File
 				RelativePath="..\include\REXLib.h"
-				>
-			</File>
-			<File
-				RelativePath="..\include\REXNative.h"
 				>
 			</File>
 		</Filter>
