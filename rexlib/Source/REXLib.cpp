@@ -7,7 +7,21 @@ namespace Rex {
   using std::string;
   using std::wstring;
 
-# define LOAD_REX_FUNC(x,y,z) p##x##=(RexNative::##x##)GetProcAddress(y,z)
+# define LOAD_REX_FUNC(x,y) pfn##x##=(RexNative::fn##x##)GetProcAddress(y,#x)
+
+  // Utility functions --------------------------------------------------------
+
+  wstring stringToWide( const string& str, UINT codepage )
+  {
+    DWORD length = MultiByteToWideChar( codepage, NULL,
+      str.c_str(), -1, NULL, NULL );
+    if ( length == 0 )
+      return wstring();
+    wstring result( length, NULL );
+    MultiByteToWideChar( codepage, NULL, str.c_str(), -1,
+      &result[0], length );
+    return result;
+  }
 
   // Exception class ----------------------------------------------------------
 
@@ -19,7 +33,7 @@ namespace Rex {
   // Loop class ---------------------------------------------------------------
 
   Loop::Loop( Factory* factory, const wstring& rexFile ): mFactory( factory ),
-  mFile( NULL ), mBuffer( NULL ), mHandle( 0 )
+  mFile( INVALID_HANDLE_VALUE ), mBuffer( NULL ), mHandle( 0 )
   {
     mFile = CreateFileW( rexFile.c_str(), GENERIC_READ, FILE_SHARE_READ,
       NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL );
@@ -29,7 +43,7 @@ namespace Rex {
     DWORD fileSize = GetFileSize( mFile, NULL );
     if ( !fileSize || fileSize == INVALID_FILE_SIZE )
     {
-      closeFile();
+      _closeFile();
       throw Exception( "Invalid loop file" );
     }
 
@@ -41,56 +55,65 @@ namespace Rex {
     if ( !ReadFile( mFile, mBuffer, fileSize, &bytesRead, NULL ) || bytesRead < fileSize )
     {
       HeapFree( mFactory->getHeap(), NULL, (LPVOID)mBuffer );
-      closeFile();
+      _closeFile();
       throw Exception( "Reading loop file failed" );
     }
 
-    loadFromBuffer( mBuffer, fileSize );
+    _loadFromBuffer( mBuffer, fileSize );
   }
 
-  uint32_t Loop::getChannels()
+  Loop::Loop( Factory* factory, void* memory, uint32_t size ):
+  mFactory( factory ), mFile( INVALID_HANDLE_VALUE ), mBuffer( NULL ),
+  mHandle( 0 )
   {
-    return mInfo.channels;
+    _loadFromBuffer( (LPBYTE)memory, size );
   }
 
-  uint32_t Loop::getSampleRate()
-  {
-    return mInfo.sampleRate;
-  }
-
-  uint32_t Loop::getSliceCount()
-  {
-    return mInfo.slices;
-  }
-
-  float Loop::getBPM()
-  {
-    float bpm = (float)mInfo.tempo / 1000.0f;
-    return bpm;
-  }
-
-  float Loop::getNativeBPM()
-  {
-    float bpm = (float)mInfo.nativeTempo / 1000.0f;
-    return bpm;
-  }
-
-  uint32_t Loop::getBits()
-  {
-    return mInfo.bits;
-  }
-
-  void Loop::loadFromBuffer( LPBYTE buffer, DWORD length )
+  void Loop::_loadFromBuffer( LPBYTE buffer, DWORD length )
   {
     if ( mFactory->pfnREXCreate( &mHandle, buffer, length, NULL, NULL ) != RexNative::Return_Ok )
       throw Exception( "REXCreate failed" );
-    if ( mFactory->pfnREXGetInfo( mHandle, sizeof( RexNative::Info ), &mInfo ) != RexNative::Return_Ok )
-      throw Exception( "REXGetInfo failed" );
-    if ( mFactory->pfnREXGetCreatorInfo( mHandle, sizeof( RexNative::Creator ), &mCreator ) != RexNative::Return_Ok )
-      throw Exception( "REXGetCreatorInfo failed" );
+    _readInfo();
+    _readCreator();
   }
 
-  void Loop::closeFile()
+  void Loop::_readInfo()
+  {
+    RexNative::Info info;
+    if ( mFactory->pfnREXGetInfo( mHandle, sizeof( RexNative::Info ), &info ) != RexNative::Return_Ok )
+      throw Exception( "REXGetInfo failed" );
+    mInfo.channels = info.channels;
+    mInfo.sampleRate = info.sampleRate;
+    mInfo.bits = info.bits;
+    mInfo.slices = info.slices;
+    mInfo.length = info.length;
+    mInfo.tempo = (float)info.tempo / 1000.0f;
+    mInfo.nativeTempo = (float)info.nativeTempo / 1000.0f;
+  }
+
+  void Loop::_readCreator()
+  {
+    RexNative::Creator creator;
+    if ( mFactory->pfnREXGetCreatorInfo( mHandle, sizeof( RexNative::Creator ), &creator ) != RexNative::Return_Ok )
+      throw Exception( "REXGetCreatorInfo failed" );
+    mCreator.name = stringToWide( creator.name, CP_UTF8 );
+    mCreator.copyright = stringToWide( creator.copyright, CP_UTF8 );
+    mCreator.url = stringToWide( creator.url, CP_UTF8 );
+    mCreator.email = stringToWide( creator.email, CP_UTF8 );
+    mCreator.description = stringToWide( creator.description, CP_UTF8 );
+  }
+
+  const Info& Loop::getInfo()
+  {
+    return mInfo;
+  }
+
+  const CreatorInfo& Loop::getCreator()
+  {
+    return mCreator;
+  }
+
+  void Loop::_closeFile()
   {
     if ( mFile != INVALID_HANDLE_VALUE )
       CloseHandle( mFile );
@@ -103,7 +126,7 @@ namespace Rex {
       mFactory->pfnREXDelete( &mHandle );
     if ( mBuffer )
       HeapFree( mFactory->getHeap(), NULL, (LPVOID)mBuffer );
-    closeFile();
+    _closeFile();
   }
 
   // Factory class ------------------------------------------------------------
@@ -118,14 +141,15 @@ namespace Rex {
     if ( !mLibrary )
       throw Exception( "Couldn't load REX shared library" );
 
-    LOAD_REX_FUNC( fnOpen, mLibrary, "Open" );
-    LOAD_REX_FUNC( fnClose, mLibrary, "Close" );
-    LOAD_REX_FUNC( fnREXCreate, mLibrary, "REXCreate" );
-    LOAD_REX_FUNC( fnREXDelete, mLibrary, "REXDelete" );
-    LOAD_REX_FUNC( fnREXGetInfo, mLibrary, "REXGetInfo" );
-    LOAD_REX_FUNC( fnREXGetCreatorInfo, mLibrary, "REXGetCreatorInfo" );
+    LOAD_REX_FUNC( Open, mLibrary );
+    LOAD_REX_FUNC( Close, mLibrary );
+    LOAD_REX_FUNC( REXCreate, mLibrary );
+    LOAD_REX_FUNC( REXDelete, mLibrary );
+    LOAD_REX_FUNC( REXGetInfo, mLibrary );
+    LOAD_REX_FUNC( REXGetCreatorInfo, mLibrary );
 
-    if ( !pfnOpen || !pfnClose || !pfnREXCreate || !pfnREXDelete )
+    if ( !pfnOpen || !pfnClose || !pfnREXCreate || !pfnREXDelete
+      || !pfnREXGetInfo || !pfnREXGetCreatorInfo )
       throw Exception( "Couldn't resolve REX shared library exports" );
 
     if ( !pfnOpen() )
@@ -144,6 +168,13 @@ namespace Rex {
     return loop;
   }
 
+  Loop* Factory::loadLoop( void* memory, uint32_t size )
+  {
+    Loop* loop = new Loop( this, memory, size );
+    mLoops.push_back( loop );
+    return loop;
+  }
+
   void Factory::freeLoop( Loop* loop )
   {
     for ( LoopList::iterator it = mLoops.begin(); it != mLoops.end(); ++it )
@@ -152,7 +183,7 @@ namespace Rex {
         delete loop;
         return;
       }
-    throw Exception( "Bad/unknown loop object in freeLoop()" );
+    throw Exception( "Unknown loop object" );
   }
 
   Factory::~Factory()

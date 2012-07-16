@@ -1,8 +1,8 @@
 #pragma once
 
-namespace RexNative {
+#include <stdint.h>
 
-  typedef unsigned __int32 uint32_t;
+namespace RexNative {
 
   typedef unsigned long Handle;
 
